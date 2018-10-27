@@ -3,8 +3,8 @@
 import setuptools
 import sys
 
-name = 'azure-artifacts-keyring'
-description = 'Automatically retrieve passwords for Azure Artifacts.'
+name = 'azure-devops-keyring'
+description = 'Automatically retrieve passwords for Azure DevOps.'
 version = '0.1.0'
 
 params = dict(
@@ -13,7 +13,7 @@ params = dict(
     author="Microsoft Corporation",
     author_email="python@microsoft.com",
     description=description or name,
-    url="https://github.com/Microsoft/azure-artifacts-keyring",
+    url="https://github.com/Microsoft/azure-devops-keyring",
     packages=setuptools.find_packages(),
     include_package_data=True,
     python_requires='>=3.5',
@@ -35,11 +35,11 @@ params = dict(
     ],
     entry_points={
         'keyring.backends': [
-            'AzureArtifacts = azure_artifacts_keyring:AzureArtifactsKeyring',
+            'AzureDevOpsKeyring = azure_devops_keyring:AzureDevOpsKeyring',
         ],
     },
     package_data={
-        'azure_artifacts_keyring': ['CredentialProvider.VSS.exe'],
+        'azure_devops_keyring': ['CredentialProvider.VSS.exe'],
     },
 )
 

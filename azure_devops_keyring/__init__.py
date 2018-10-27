@@ -13,6 +13,7 @@ import sys
 import warnings
 
 import keyring.backend
+import keyring.credentials
 
 try:
     from importlib_resources import path as path_in_package
@@ -21,7 +22,7 @@ except ImportError:
 
 
 class AzureDevOpsKeyring(keyring.backend.KeyringBackend):
-    SUPPORTED_NETLOC = frozenset(("dev.azure.com", "pkg.dev.azure.com"))
+    SUPPORTED_NETLOC = frozenset(("dev.azure.com", "pkgs.dev.azure.com"))
 
     def __init__(self):
         # In-memory cache of user-pass combination, to allow
@@ -45,10 +46,10 @@ class AzureDevOpsKeyring(keyring.backend.KeyringBackend):
                 proc.wait()
                 data = json.load(proc.stdout)
                 if proc.returncode != 0:
-                    return None, None
+                    return None
         username, password = data["Username"], data["Password"]
         self._cache[service, username] = password
-        return keyring.backend.Credential(username, password)
+        return keyring.credentials.SimpleCredential(username, password)
 
     def get_credential(self, service, username):
         try:
@@ -57,7 +58,7 @@ class AzureDevOpsKeyring(keyring.backend.KeyringBackend):
             warnings.warn(str(exc))
             return None
 
-        if parsed.netloc not in self.SUPPORTED_NETLOCS:
+        if parsed.netloc not in self.SUPPORTED_NETLOC:
             return None
 
         if sys.platform == "win32":
@@ -67,7 +68,7 @@ class AzureDevOpsKeyring(keyring.backend.KeyringBackend):
         return None
 
     def get_password(self, service, username):
-        password = self._cache.pop((service, username), None)
+        password = self._cache.get((service, username), None)
         if password is not None:
             return password
 
