@@ -1,11 +1,22 @@
 #!/usr/bin/env python3
 
+import os
 import setuptools
+import shutil
 import sys
+import tarfile
+import tempfile
+import urllib.request
+
+CREDENTIAL_PROVIDER = (
+    "https://github.com/Microsoft/artifacts-credprovider/releases/download/" +
+    "v0.1.7" +
+    "/Microsoft.NuGet.CredentialProvider.tar.gz"
+)
 
 name = 'azure-devops-keyring'
 description = 'Automatically retrieve passwords for Azure DevOps.'
-version = '0.1.0'
+version = '0.2'
 
 params = dict(
     name=name,
@@ -31,12 +42,23 @@ params = dict(
             'AzureDevOpsKeyring = azure_devops_keyring:AzureDevOpsKeyring',
         ],
     },
-    package_data={
-        'azure_devops_keyring': [
-            'CredentialProvider.VSS.exe',
-        ],
-    },
+    package_data={},
 )
 
 if __name__ == '__main__':
+    dest = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "azure_devops_keyring",
+        "plugins"
+    )
+    
+    if not os.path.isdir(dest):
+        tmp = tempfile.mkdtemp()
+        
+        with urllib.request.urlopen(CREDENTIAL_PROVIDER) as fileobj:
+            tar = tarfile.open(mode="r|gz", fileobj=fileobj)
+            tar.extractall(tmp)
+
+        shutil.copytree(os.path.join(tmp, "plugins"), dest)
+
     setuptools.setup(**params)

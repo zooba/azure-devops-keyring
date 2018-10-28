@@ -1,1 +1,1 @@
-include azure_devops_keyring/CredentialProvider.VSS.exe
+recursive-include azure_devops_keyring/plugins *

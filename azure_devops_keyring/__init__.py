@@ -13,7 +13,8 @@ import subprocess
 import sys
 import warnings
 
-from .support import path_in_package, Popen, urlsplit
+from .support import urlsplit
+from .plugin import CredentialProvider
 
 import keyring.backend
 import keyring.credentials
@@ -31,21 +32,6 @@ class AzureDevOpsKeyring(keyring.backend.KeyringBackend):
         # around for longer than necessary.
         self._cache = {}
 
-    def _get_win32(self, service):
-        with path_in_package(__name__, "CredentialProvider.VSS.exe") as f:
-            with Popen(
-                [str(f), "-N", "-U", service],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            ) as proc:
-                proc.wait()
-                data = json.load(proc.stdout)
-                if proc.returncode != 0:
-                    return None
-        username, password = data["Username"], data["Password"]
-        self._cache[service, username] = password
-        return keyring.credentials.SimpleCredential(username, password)
-
     def get_credential(self, service, username):
         try:
             parsed = urlsplit(service)
@@ -53,15 +39,16 @@ class AzureDevOpsKeyring(keyring.backend.KeyringBackend):
             warnings.warn(str(exc))
             return None
 
-        netloc = parsed.netloc.rpartition('@')[-1]
+        netloc = parsed.netloc.rpartition("@")[-1]
         if netloc not in self.SUPPORTED_NETLOC:
             return None
 
-        if sys.platform == "win32":
-            return self._get_win32(service)
+        with CredentialProvider() as provider:
+            username, password = provider.get_credentials(service)
 
-        warnings.warn("Unsupported platform: " + sys.platform)
-        return None
+        if username and password:
+            self._cache[service, username] = password
+            return keyring.credentials.SimpleCredential(username, password)
 
     def get_password(self, service, username):
         password = self._cache.get((service, username), None)
