@@ -16,7 +16,7 @@ CREDENTIAL_PROVIDER = (
 
 name = 'azure-devops-keyring'
 description = 'Automatically retrieve passwords for Azure DevOps.'
-version = '0.2'
+version = '0.2.1'
 
 params = dict(
     name=name,

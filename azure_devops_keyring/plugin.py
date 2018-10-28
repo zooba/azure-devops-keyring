@@ -24,8 +24,12 @@ class CredentialProvider(object):
                 )
             ]
         else:
+            try:
+                from dotnetcore2.runtime import get_runtime_path
+            except ImportError:
+                get_runtime_path = lambda: "dotnet"
             self.exe = [
-                "dotnet",
+                get_runtime_path(),
                 "exec",
                 os.path.join(
                     os.path.dirname(os.path.abspath(__file__)),
@@ -54,7 +58,7 @@ class CredentialProvider(object):
             except OSError:
                 pass
 
-    def _read(self, method):
+    def _read1(self, method):
         pending = self._messages.get(method)
         if pending:
             return pending.pop(0)
@@ -65,6 +69,12 @@ class CredentialProvider(object):
             if msg["Method"] == method:
                 return msg
             self._messages.setdefault(msg["Method"], []).append(msg)
+
+    def _read(self, method):
+        msg = self._read1(method)
+        if msg and msg["Type"] == "Fault":
+            raise RuntimeError(msg["Payload"].get("Message", msg))
+        return msg
 
     def __enter__(self):
         if not self.proc:
@@ -159,7 +169,9 @@ class CredentialProvider(object):
 
         while True:
             req = self._read("GetAuthenticationCredentials")
-            if req["Type"] == "Response":
+            if not req:
+                raise RuntimeError("failed to get credentials")
+            elif req["Type"] == "Response":
                 payload = req["Payload"]
                 if payload["ResponseCode"] == "Success":
                     return payload["Username"], payload["Password"]
