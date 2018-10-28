@@ -55,9 +55,9 @@ class AzureDevOpsKeyring(keyring.backend.KeyringBackend):
         if password is not None:
             return password
 
-        actual_username, password = self.get_username_and_password(service, None)
-        if username == actual_username:
-            return password
+        creds = self.get_credential(service, None)
+        if creds and username == creds.username:
+            return creds.password
 
         return None
 
