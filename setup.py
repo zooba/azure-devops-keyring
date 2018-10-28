@@ -16,19 +16,12 @@ params = dict(
     url="https://github.com/Microsoft/azure-devops-keyring",
     packages=setuptools.find_packages(),
     include_package_data=True,
-    python_requires='>=3.5',
-    install_requires=[
-        'keyring',
-        'importlib_resources',
-    ],
-    extras_require={
-    },
-    setup_requires=[
-    ],
+    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*',
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
@@ -39,7 +32,9 @@ params = dict(
         ],
     },
     package_data={
-        'azure_devops_keyring': ['CredentialProvider.VSS.exe'],
+        'azure_devops_keyring': [
+            'CredentialProvider.VSS.exe',
+        ],
     },
 )
 

@@ -3,26 +3,25 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
+from __future__ import absolute_import
+
 __author__ = "Steve Dower <steve.dower@microsoft.com>"
 __version__ = "0.1.0"
 
 import json
-import urllib.parse
 import subprocess
 import sys
 import warnings
 
+from .support import path_in_package, Popen, urlsplit
+
 import keyring.backend
 import keyring.credentials
-
-try:
-    from importlib_resources import path as path_in_package
-except ImportError:
-    from importlib.resources import path as path_in_package
 
 
 class AzureDevOpsKeyring(keyring.backend.KeyringBackend):
     SUPPORTED_NETLOC = frozenset(("dev.azure.com", "pkgs.dev.azure.com"))
+    priority = 10
 
     def __init__(self):
         # In-memory cache of user-pass combination, to allow
@@ -32,13 +31,9 @@ class AzureDevOpsKeyring(keyring.backend.KeyringBackend):
         # around for longer than necessary.
         self._cache = {}
 
-    @property
-    def priority(self):
-        return 10
-
     def _get_win32(self, service):
         with path_in_package(__name__, "CredentialProvider.VSS.exe") as f:
-            with subprocess.Popen(
+            with Popen(
                 [str(f), "-N", "-U", service],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -53,12 +48,13 @@ class AzureDevOpsKeyring(keyring.backend.KeyringBackend):
 
     def get_credential(self, service, username):
         try:
-            parsed = urllib.parse.urlsplit(service)
+            parsed = urlsplit(service)
         except Exception as exc:
             warnings.warn(str(exc))
             return None
 
-        if parsed.netloc not in self.SUPPORTED_NETLOC:
+        netloc = parsed.netloc.rpartition('@')[-1]
+        if netloc not in self.SUPPORTED_NETLOC:
             return None
 
         if sys.platform == "win32":
@@ -79,4 +75,7 @@ class AzureDevOpsKeyring(keyring.backend.KeyringBackend):
         return None
 
     def set_password(self, service, username, password):
-        pass
+        raise NotImplementedError()
+
+    def delete_password(self, service, username):
+        raise NotImplementedError()
