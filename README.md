@@ -1,3 +1,5 @@
+**Note:** this package is deprecated in favor of [`artifacts-keyring`](https://pypi.org/project/artifacts-keyring/).
+
 # azure-devops-keyring
 Provides authentication for [Azure DevOps](https://azure.com/devops) via the `keyring` library
 
